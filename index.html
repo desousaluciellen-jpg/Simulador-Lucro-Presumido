@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- Playables SDK -->
+<!-- Playables SDK (mantido exatamente como original) -->
 <script>// Playables SDK v1.0.0
 // Game lifecycle bridge: rAF-based game-ready detection + event communication
 (function() {
@@ -213,6 +213,8 @@
   .pdf-section { margin-bottom:18px; page-break-inside:avoid; }
   .pdf-section h2 { font-size:14px; font-weight:600; color:#0f4c5c; margin:0 0 8px; text-transform:uppercase; letter-spacing:0.5px; }
   .pdf-table { width:100%; border-collapse:collapse; font-size:10pt; }
+  .pdf-table.compact { font-size:8pt; }
+  .pdf-table.compact th, .pdf-table.compact td { padding:4px 5px; }
   .pdf-table th { background:#0f4c5c; color:white; padding:7px 8px; text-align:left; font-weight:600; font-size:9pt; }
   .pdf-table th.right, .pdf-table td.right { text-align:right; }
   .pdf-table td { padding:7px 8px; border-bottom:1px solid #e2e8f0; }
@@ -225,6 +227,7 @@
   .pdf-footer { margin-top:25px; padding-top:10px; border-top:1px solid #cbd5e1; font-size:9px; color:#64748b; display:flex; justify-content:space-between; }
   .badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:600; }
   .badge-majorado { background:#dcfce7; color:#166534; }
+  .page-break { page-break-before: always; }
   @page { size: A4 portrait; margin:0; }
 </style>
 </head>
@@ -236,9 +239,10 @@
         <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#0f4c5c]">Calculadora Lucro Presumido</h1>
         <p class="text-slate-600 mt-1 text-sm">IRPJ e CSLL com majoração e recálculo do Inciso I, §5º art.15</p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <button id="btnZerar" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-sm font-medium transition">Zerar</button>
         <button id="btnExemplo" class="px-4 py-2.5 rounded-xl bg-[#0f4c5c] hover:bg-[#0d3f4c] text-white text-sm font-medium shadow-sm transition">Carregar exemplo</button>
+        <button id="btnReplicar" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium shadow-sm transition">Replicar Dados</button>
         <button id="btnExcel" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-sm transition">Exportar Excel</button>
         <button id="btnExport" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shadow-sm transition">Exportar PDF</button>
       </div>
@@ -246,7 +250,7 @@
   </header>
 
   <div class="mb-4 bg-white rounded-2xl border border-slate-200 p-4 sm:p-5">
-    <div class="grid sm:grid-cols-2 gap-4">
+    <div class="grid sm:grid-cols-3 gap-4">
       <div>
         <label class="text-xs text-slate-600">Razão Social</label>
         <input id="razaoSocial" type="text" placeholder="Ex: Empresa Exemplo LTDA" class="mt-1 w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/20 focus:border-[#0f4c5c]">
@@ -255,15 +259,19 @@
         <label class="text-xs text-slate-600">CNPJ</label>
         <input id="cnpj" type="text" placeholder="00.000.000/0000-00" class="mt-1 w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/20 focus:border-[#0f4c5c]">
       </div>
+      <div>
+        <label class="text-xs text-slate-600">Período de Apuração</label>
+        <input id="periodo" type="text" placeholder="2026" value="2026" class="mt-1 w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/20 focus:border-[#0f4c5c]">
+      </div>
     </div>
-    <p class="text-[11px] text-slate-500 mt-2">Essas informações aparecem no topo do PDF para identificação.</p>
+    <p class="text-[11px] text-slate-500 mt-2">Essas informações aparecem no topo do PDF e Excel.</p>
   </div>
 
   <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
     <nav class="flex border-b border-slate-200 bg-slate-50/50">
-      <button data-tab="irpj" class="tab-btn tab-active flex-1 sm:flex-none px-5 py-3.5 text-sm font-semibold border-b-2 transition">IRPJ</button>
-      <button data-tab="csll2026" class="tab-btn flex-1 sm:flex-none px-5 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition">CSLL 2026</button>
-      <button data-tab="csll2027" class="tab-btn flex-1 sm:flex-none px-5 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-slate-900 transition">CSLL 2027</button>
+      <button data-tab="majorada" class="tab-btn tab-active flex-1 sm:flex-none px-5 py-3.5 text-sm font-semibold border-b-2 transition">Apuração Majorada</button>
+      <button data-tab="sem-majoracao" class="tab-btn flex-1 sm:flex-none px-5 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 transition">Apuração sem Majoração</button>
+      <button data-tab="comparativo" class="tab-btn flex-1 sm:flex-none px-5 py-3.5 text-sm font-semibold border-b-2 border-transparent text-slate-600 transition">Comparativo Fiscal</button>
     </nav>
     <div id="panels"></div>
   </div>
@@ -300,27 +308,30 @@
         </table>
       </div>
     </div>
+    <div class="p-4 sm:p-6 apuracao-content"></div>
+  </div>
+</template>
+
+<template id="comparativo-template">
+  <div class="panel hidden">
     <div class="p-4 sm:p-6">
-      <h3 class="font-semibold text-slate-900 mb-3">Apuração Trimestral</h3>
+      <h3 class="font-semibold text-slate-900 mb-4">Comparativo Fiscal - Com e Sem Majoração</h3>
       <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full min-w-[960px] text-sm">
           <thead class="bg-slate-50"><tr class="text-xs uppercase tracking-wide text-slate-600">
             <th class="py-2.5 px-3 text-left font-medium">Tri</th>
             <th class="py-2.5 px-3 text-right font-medium">Receita Total</th>
-            <th class="py-2.5 px-3 text-right font-medium">Sem Majoração</th>
-            <th class="py-2.5 px-3 text-right font-medium">Com Majoração</th>
-            <th class="py-2.5 px-3 text-right font-medium">Base IRPJ</th>
-            <th class="py-2.5 px-3 text-right font-medium">IRPJ a Pagar</th>
-            <th class="py-2.5 px-3 text-right font-medium">Base CSLL</th>
-            <th class="py-2.5 px-3 text-right font-medium">CSLL a Pagar</th>
+            <th class="py-2.5 px-3 text-right font-medium">IRPJ s/ Majoração</th>
+            <th class="py-2.5 px-3 text-right font-medium">IRPJ c/ Majoração</th>
+            <th class="py-2.5 px-3 text-right font-medium">Dif. IRPJ</th>
+            <th class="py-2.5 px-3 text-right font-medium">CSLL s/ Majoração</th>
+            <th class="py-2.5 px-3 text-right font-medium">CSLL c/ Majoração</th>
+            <th class="py-2.5 px-3 text-right font-medium">Dif. CSLL</th>
+            <th class="py-2.5 px-3 text-right font-medium">Dif. Total</th>
           </tr></thead>
-          <tbody class="results divide-y divide-slate-100 bg-white"></tbody>
-          <tfoot class="bg-slate-50 font-medium"><tr class="totais"></tr></tfoot>
+          <tbody class="comparativo-body divide-y divide-slate-100 bg-white"></tbody>
+          <tfoot class="bg-slate-50 font-medium"><tr class="comparativo-totais"></tr></tfoot>
         </table>
-      </div>
-      <div class="grid lg:grid-cols-3 gap-4 mt-6">
-        <div class="lg:col-span-2 grid sm:grid-cols-3 gap-3 resumo"></div>
-        <div class="inciso p-4 rounded-xl border border-amber-200 bg-amber-50"></div>
       </div>
     </div>
   </div>
@@ -337,38 +348,49 @@ const atividades = [
   {key:'csllret', label:'CSLL Retida (abate CSLL)'}
 ];
 const store = {
-  irpj:{ comb:[0,0,0,0], comerc:[0,0,0,0], serv:[0,0,0,0], fin:[0,0,0,0], cred:[0,0,0,0], irrf:[0,0,0,0], csllret:[0,0,0,0] },
-  csll2026:{ comb:[0,0,0,0], comerc:[0,0,0,0], serv:[0,0,0,0], fin:[0,0,0,0], cred:[0,0,0,0], irrf:[0,0,0,0], csllret:[0,0,0,0] },
-  csll2027:{ comb:[0,0,0,0], comerc:[0,0,0,0], serv:[0,0,0,0], fin:[0,0,0,0], cred:[0,0,0,0], irrf:[0,0,0,0], csllret:[0,0,0,0] }
+  irpj:{ comb:[0,0,0,0], comerc:[0,0,0,0], serv:[0,0,0,0], fin:[0,0,0,0], cred:[0,0,0,0], irrf:[0,0,0,0], csllret:[0,0,0,0] }
 };
 const fmtBRL = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmtNum = v => (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const round2 = v => Math.round((v+Number.EPSILON)*100)/100;
 const parseCurrency = s => { if(!s) return 0; const n = parseFloat(String(s).replace(/\s/g,'').replace(/\./g,'').replace(',','.').replace(/[^\d.-]/g,'')); return isNaN(n)?0:n; };
 
-function calcular(tabKey){
-  const d = store[tabKey]; const res=[]; let acumSem=0;
+function calcularComMajoracao(){
+  const d = store.irpj; const res=[]; 
+  const periodo = parseInt(document.getElementById('periodo')?.value) || new Date().getFullYear();
+  let acumSemIRPJ=0;
+  let acumSemCSLL=0;
   for(let t=0;t<4;t++){
     const comb=d.comb[t]||0, comerc=d.comerc[t]||0, serv=d.serv[t]||0, fin=d.fin[t]||0, cred=d.cred[t]||0, irrf=d.irrf[t]||0, csllret=d.csllret[t]||0;
     const totalReceita=round2(comb+comerc+serv);
-    const limiteAcum=(t+1)*1250000;
-    const semMajoracao=round2(Math.min(totalReceita,Math.max(0,limiteAcum-acumSem)));
-    const comMajoracao=round2(totalReceita-semMajoracao); acumSem=round2(acumSem+semMajoracao);
-    const ratio=totalReceita>0?semMajoracao/totalReceita:0;
-    const combSem=round2(comb*ratio), combCom=round2(comb-combSem);
-    const comSem=round2(comerc*ratio), comCom=round2(comerc-comSem);
-    const servSem=round2(serv*ratio), servCom=round2(serv-servSem);
-    const baseIrpjSem=round2(combSem*0.016+comSem*0.08+servSem*0.32);
-    const baseIrpjCom=round2(combCom*0.0176+comCom*0.088+servCom*0.352);
+    const limiteIRPJ=(t+1)*1250000;
+    const semMajoracaoIRPJ=round2(Math.min(totalReceita,Math.max(0,limiteIRPJ-acumSemIRPJ)));
+    const comMajoracaoIRPJ=round2(totalReceita-semMajoracaoIRPJ); acumSemIRPJ=round2(acumSemIRPJ+semMajoracaoIRPJ);
+    let semMajoracaoCSLL, comMajoracaoCSLL;
+    const usa2026 = periodo<=2026;
+    if(usa2026){
+      if(t===0){ semMajoracaoCSLL=totalReceita; comMajoracaoCSLL=0; }
+      else { const limiteCSLL=t*1250000; semMajoracaoCSLL=round2(Math.min(totalReceita,Math.max(0,limiteCSLL-acumSemCSLL))); comMajoracaoCSLL=round2(totalReceita-semMajoracaoCSLL); acumSemCSLL=round2(acumSemCSLL+semMajoracaoCSLL); }
+    } else { const limiteCSLL=(t+1)*1250000; semMajoracaoCSLL=round2(Math.min(totalReceita,Math.max(0,limiteCSLL-acumSemCSLL))); comMajoracaoCSLL=round2(totalReceita-semMajoracaoCSLL); acumSemCSLL=round2(acumSemCSLL+semMajoracaoCSLL); }
+    const ratioIRPJ=totalReceita>0?semMajoracaoIRPJ/totalReceita:0;
+    const ratioCSLL=totalReceita>0?semMajoracaoCSLL/totalReceita:0;
+    const combSemIRPJ=round2(comb*ratioIRPJ), combComIRPJ=round2(comb-combSemIRPJ);
+    const comSemIRPJ=round2(comerc*ratioIRPJ), comComIRPJ=round2(comerc-comSemIRPJ);
+    const servSemIRPJ=round2(serv*ratioIRPJ), servComIRPJ=round2(serv-servSemIRPJ);
+    const combSemCSLL=round2(comb*ratioCSLL), combComCSLL=round2(comb-combSemCSLL);
+    const comSemCSLL=round2(comerc*ratioCSLL), comComCSLL=round2(comerc-comSemCSLL);
+    const servSemCSLL=round2(serv*ratioCSLL), servComCSLL=round2(serv-servSemCSLL);
+    const baseIrpjSem=round2(combSemIRPJ*0.016+comSemIRPJ*0.08+servSemIRPJ*0.32);
+    const baseIrpjCom=round2(combComIRPJ*0.0176+comComIRPJ*0.088+servComIRPJ*0.352);
     const baseIrpj=round2(baseIrpjSem+baseIrpjCom+fin+cred);
     const irpjTotal=round2(baseIrpj*0.15+Math.max(0,baseIrpj-60000)*0.10);
     const irpjLiquido=round2(Math.max(0,irpjTotal-irrf));
-    const baseCsllSem=round2(combSem*0.12+comSem*0.12+servSem*0.32);
-    const baseCsllCom=round2(combCom*0.132+comCom*0.132+servCom*0.352);
+    const baseCsllSem=round2(combSemCSLL*0.12+comSemCSLL*0.12+servSemCSLL*0.32);
+    const baseCsllCom=round2(combComCSLL*0.132+comComCSLL*0.132+servComCSLL*0.352);
     const baseCsll=round2(baseCsllSem+baseCsllCom+fin+cred);
     const csllTotal=round2(baseCsll*0.09);
     const csllLiquida=round2(Math.max(0,csllTotal-csllret));
-    res.push({t,totalReceita,semMajoracao,comMajoracao,baseIrpj,irpjTotal,irpjLiquido,irrf,baseCsll,csllTotal,csllLiquida,csllret});
+    res.push({t,totalReceita,semMajoracao:semMajoracaoIRPJ,comMajoracao:comMajoracaoIRPJ,baseIrpj,irpjTotal,irpjLiquido,irrf,baseCsll,csllTotal,csllLiquida,csllret});
   }
   const receitaAnual=round2(res.reduce((s,r)=>s+r.totalReceita,0));
   const totalComMaj=round2(res.reduce((s,r)=>s+r.comMajoracao,0));
@@ -378,87 +400,365 @@ function calcular(tabKey){
   return {res,receitaAnual,aplicaInciso,diffTotal,totalComMaj};
 }
 
+function calcularSemMajoracao(){
+  const d = store.irpj; const res=[];
+  for(let t=0;t<4;t++){
+    const comb=d.comb[t]||0, comerc=d.comerc[t]||0, serv=d.serv[t]||0, fin=d.fin[t]||0, cred=d.cred[t]||0, irrf=d.irrf[t]||0, csllret=d.csllret[t]||0;
+    const totalReceita=round2(comb+comerc+serv);
+    const baseIrpj=round2(comb*0.016+comerc*0.08+serv*0.32+fin+cred);
+    const irpjTotal=round2(baseIrpj*0.15+Math.max(0,baseIrpj-60000)*0.10);
+    const irpjLiquido=round2(Math.max(0,irpjTotal-irrf));
+    const baseCsll=round2(comb*0.12+comerc*0.12+serv*0.32+fin+cred);
+    const csllTotal=round2(baseCsll*0.09);
+    const csllLiquida=round2(Math.max(0,csllTotal-csllret));
+    res.push({t,totalReceita,baseIrpj,irpjTotal,irpjLiquido,irrf,baseCsll,csllTotal,csllLiquida,csllret});
+  }
+  return {res,receitaAnual:round2(res.reduce((s,r)=>s+r.totalReceita,0))};
+}
+
+function atualizarPainel(key){
+  if(key==='majorada'){
+    const calc=calcularComMajoracao(); const panel=document.getElementById('panel-majorada'); const tbody=panel.querySelector('.results');
+    tbody.innerHTML=calc.res.map(r=>`<tr class="${r.comMajoracao>0?'bg-emerald-50/70':''}"><td class="py-2.5 px-3 font-medium">T${r.t+1}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.totalReceita)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.semMajoracao)}</td><td class="py-2.5 px-3 text-right tabular-nums ${r.comMajoracao>0?'text-emerald-700 font-semibold':''}">${fmtBRL(r.comMajoracao)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.baseIrpj)}</td><td class="py-2.5 px-3 text-right tabular-nums font-medium">${fmtBRL(r.irpjLiquido)}${r.irrf>0?`<div class="text-[10px] text-slate-500">IRRF ${fmtBRL(r.irrf)}</div>`:''}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.baseCsll)}</td><td class="py-2.5 px-3 text-right tabular-nums font-medium">${fmtBRL(r.csllLiquida)}${r.csllret>0?`<div class="text-[10px] text-slate-500">Ret ${fmtBRL(r.csllret)}</div>`:''}</td></tr>`).join('');
+    const totBaseIrpj=round2(calc.res.reduce((s,r)=>s+r.baseIrpj,0)); const totIrpjLiq=round2(calc.res.reduce((s,r)=>s+r.irpjLiquido,0)); const totBaseCsll=round2(calc.res.reduce((s,r)=>s+r.baseCsll,0)); const totCsllLiq=round2(calc.res.reduce((s,r)=>s+r.csllLiquida,0));
+    panel.querySelector('.totais').innerHTML=`<td class="py-2.5 px-3">Total Anual</td><td class="py-2.5 px-3 text-right">${fmtBRL(calc.receitaAnual)}</td><td colspan="2"></td><td class="py-2.5 px-3 text-right">${fmtBRL(totBaseIrpj)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totIrpjLiq)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totBaseCsll)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totCsllLiq)}</td>`;
+    panel.querySelector('.resumo').innerHTML=`<div class="p-4 rounded-xl border border-slate-200 bg-slate-50"><p class="text-xs text-slate-500">Receita Anual</p><p class="text-xl font-semibold mt-1">${fmtBRL(calc.receitaAnual)}</p></div><div class="p-4 rounded-xl border border-slate-200"><p class="text-xs text-slate-500">IRPJ a Pagar</p><p class="text-xl font-semibold mt-1 text-[#0f4c5c]">${fmtBRL(totIrpjLiq)}</p></div><div class="p-4 rounded-xl border border-slate-200"><p class="text-xs text-slate-500">CSLL a Pagar</p><p class="text-xl font-semibold mt-1 text-[#0f4c5c]">${fmtBRL(totCsllLiq)}</p></div>`;
+    panel.querySelector('.inciso').innerHTML=`<div class="flex items-start gap-3"><div class="mt-0.5 w-8 h-8 rounded-lg bg-amber-600/10 flex items-center justify-center shrink-0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2"><path d="M12 9v4M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="font-semibold text-amber-900">Inciso I, §5º art.15</p><p class="text-sm mt-1">Aplicação: <span class="font-bold ${calc.aplicaInciso?'text-emerald-700':'text-slate-700'}">${calc.aplicaInciso?'SIM':'NÃO'}</span></p><p class="text-sm">Valor a deduzir no 4º tri: <span class="font-semibold">${fmtBRL(calc.diffTotal)}</span></p></div></div>`;
+  } else if(key==='sem-majoracao'){
+    const calc=calcularSemMajoracao(); const panel=document.getElementById('panel-sem-majoracao'); const tbody=panel.querySelector('.results');
+    tbody.innerHTML=calc.res.map(r=>`<tr><td class="py-2.5 px-3 font-medium">T${r.t+1}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.totalReceita)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.baseIrpj)}</td><td class="py-2.5 px-3 text-right tabular-nums font-medium">${fmtBRL(r.irpjLiquido)}${r.irrf>0?`<div class="text-[10px] text-slate-500">IRRF ${fmtBRL(r.irrf)}</div>`:''}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.baseCsll)}</td><td class="py-2.5 px-3 text-right tabular-nums font-medium">${fmtBRL(r.csllLiquida)}${r.csllret>0?`<div class="text-[10px] text-slate-500">Ret ${fmtBRL(r.csllret)}</div>`:''}</td></tr>`).join('');
+    const totBaseIrpj=round2(calc.res.reduce((s,r)=>s+r.baseIrpj,0)); const totIrpjLiq=round2(calc.res.reduce((s,r)=>s+r.irpjLiquido,0)); const totBaseCsll=round2(calc.res.reduce((s,r)=>s+r.baseCsll,0)); const totCsllLiq=round2(calc.res.reduce((s,r)=>s+r.csllLiquida,0));
+    panel.querySelector('.totais').innerHTML=`<td class="py-2.5 px-3">Total Anual</td><td class="py-2.5 px-3 text-right">${fmtBRL(calc.receitaAnual)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totBaseIrpj)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totIrpjLiq)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totBaseCsll)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totCsllLiq)}</td>`;
+    panel.querySelector('.resumo').innerHTML=`<div class="p-4 rounded-xl border border-slate-200 bg-slate-50"><p class="text-xs text-slate-500">Receita Anual</p><p class="text-xl font-semibold mt-1">${fmtBRL(calc.receitaAnual)}</p></div><div class="p-4 rounded-xl border border-slate-200"><p class="text-xs text-slate-500">IRPJ a Pagar</p><p class="text-xl font-semibold mt-1 text-[#0f4c5c]">${fmtBRL(totIrpjLiq)}</p></div><div class="p-4 rounded-xl border border-slate-200"><p class="text-xs text-slate-500">CSLL a Pagar</p><p class="text-xl font-semibold mt-1 text-[#0f4c5c]">${fmtBRL(totCsllLiq)}</p></div>`;
+  } else if(key==='comparativo'){
+    const calcCom=calcularComMajoracao(); const calcSem=calcularSemMajoracao(); const panel=document.getElementById('panel-comparativo'); const tbody=panel.querySelector('.comparativo-body');
+    tbody.innerHTML='';
+    for(let t=0;t<4;t++){
+      const rCom=calcCom.res[t]; const rSem=calcSem.res[t];
+      const difIRPJ=round2(rCom.irpjLiquido-rSem.irpjLiquido);
+      const difCSLL=round2(rCom.csllLiquida-rSem.csllLiquida);
+      const difTotal=round2(difIRPJ+difCSLL);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td class="py-2.5 px-3 font-medium">T${t+1}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(rSem.totalReceita)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(rSem.irpjLiquido)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(rCom.irpjLiquido)}</td><td class="py-2.5 px-3 text-right tabular-nums ${difIRPJ>0?'text-red-600 font-semibold':'text-emerald-600'}">${fmtBRL(difIRPJ)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(rSem.csllLiquida)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(rCom.csllLiquida)}</td><td class="py-2.5 px-3 text-right tabular-nums ${difCSLL>0?'text-red-600 font-semibold':'text-emerald-600'}">${fmtBRL(difCSLL)}</td><td class="py-2.5 px-3 text-right tabular-nums font-bold ${difTotal>0?'text-red-600':'text-emerald-600'}">${fmtBRL(difTotal)}</td>`;
+      tbody.appendChild(tr);
+    }
+    const totSemIRPJ=round2(calcSem.res.reduce((s,r)=>s+r.irpjLiquido,0));
+    const totComIRPJ=round2(calcCom.res.reduce((s,r)=>s+r.irpjLiquido,0));
+    const totSemCSLL=round2(calcSem.res.reduce((s,r)=>s+r.csllLiquida,0));
+    const totComCSLL=round2(calcCom.res.reduce((s,r)=>s+r.csllLiquida,0));
+    const totDifIRPJ=round2(totComIRPJ-totSemIRPJ);
+    const totDifCSLL=round2(totComCSLL-totSemCSLL);
+    const totDifTotal=round2(totDifIRPJ+totDifCSLL);
+    panel.querySelector('.comparativo-totais').innerHTML=`<td class="py-2.5 px-3">Total Anual</td><td class="py-2.5 px-3 text-right">${fmtBRL(calcSem.receitaAnual)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totSemIRPJ)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totComIRPJ)}</td><td class="py-2.5 px-3 text-right ${totDifIRPJ>0?'text-red-600':'text-emerald-600'}">${fmtBRL(totDifIRPJ)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totSemCSLL)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totComCSLL)}</td><td class="py-2.5 px-3 text-right ${totDifCSLL>0?'text-red-600':'text-emerald-600'}">${fmtBRL(totDifCSLL)}</td><td class="py-2.5 px-3 text-right font-bold ${totDifTotal>0?'text-red-600':'text-emerald-600'}">${fmtBRL(totDifTotal)}</td>`;
+  }
+}
+
 function criarPaineis(){
   const panels=document.getElementById('panels'); const tpl=document.getElementById('panel-template');
-  ['irpj','csll2026','csll2027'].forEach(key=>{
-    const node=tpl.content.cloneNode(true); const panel=node.querySelector('.panel'); panel.id=`panel-${key}`; panel.dataset.key=key; panels.appendChild(node);
-    const tbody=panel.querySelector('.inputs');
-    const base=atividades.slice(0,5); let exibir=[...base]; exibir.push(key==='irpj'?atividades[5]:atividades[6]);
+  
+  // Aba Majorada
+  const nodeMajorada=tpl.content.cloneNode(true); const panelMajorada=nodeMajorada.querySelector('.panel'); panelMajorada.id='panel-majorada'; panelMajorada.dataset.key='majorada';
+  const apuracaoContent=panelMajorada.querySelector('.apuracao-content');
+  apuracaoContent.innerHTML=`<h3 class="font-semibold text-slate-900 mb-3">Apuração Trimestral - Com Majoração</h3>
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="w-full min-w-[960px] text-sm">
+        <thead class="bg-slate-50"><tr class="text-xs uppercase tracking-wide text-slate-600">
+          <th class="py-2.5 px-3 text-left font-medium">Tri</th>
+          <th class="py-2.5 px-3 text-right font-medium">Receita Total</th>
+          <th class="py-2.5 px-3 text-right font-medium">Sem Majoração</th>
+          <th class="py-2.5 px-3 text-right font-medium">Com Majoração</th>
+          <th class="py-2.5 px-3 text-right font-medium">Base IRPJ</th>
+          <th class="py-2.5 px-3 text-right font-medium">IRPJ a Pagar</th>
+          <th class="py-2.5 px-3 text-right font-medium">Base CSLL</th>
+          <th class="py-2.5 px-3 text-right font-medium">CSLL a Pagar</th>
+        </tr></thead>
+        <tbody class="results divide-y divide-slate-100 bg-white"></tbody>
+        <tfoot class="bg-slate-50 font-medium"><tr class="totais"></tr></tfoot>
+      </table>
+    </div>
+    <div class="grid lg:grid-cols-3 gap-4 mt-6">
+      <div class="lg:col-span-2 grid sm:grid-cols-3 gap-3 resumo"></div>
+      <div class="inciso p-4 rounded-xl border border-amber-200 bg-amber-50"></div>
+    </div>`;
+  panels.appendChild(nodeMajorada);
+  
+  // Aba Sem Majoração
+  const nodeSem=tpl.content.cloneNode(true); const panelSem=nodeSem.querySelector('.panel'); panelSem.id='panel-sem-majoracao'; panelSem.dataset.key='sem-majoracao'; panelSem.classList.add('hidden');
+  const apuracaoContentSem=panelSem.querySelector('.apuracao-content');
+  apuracaoContentSem.innerHTML=`<h3 class="font-semibold text-slate-900 mb-3">Apuração Trimestral - Sem Majoração</h3>
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="w-full min-w-[960px] text-sm">
+        <thead class="bg-slate-50"><tr class="text-xs uppercase tracking-wide text-slate-600">
+          <th class="py-2.5 px-3 text-left font-medium">Tri</th>
+          <th class="py-2.5 px-3 text-right font-medium">Receita Total</th>
+          <th class="py-2.5 px-3 text-right font-medium">Base IRPJ</th>
+          <th class="py-2.5 px-3 text-right font-medium">IRPJ a Pagar</th>
+          <th class="py-2.5 px-3 text-right font-medium">Base CSLL</th>
+          <th class="py-2.5 px-3 text-right font-medium">CSLL a Pagar</th>
+        </tr></thead>
+        <tbody class="results divide-y divide-slate-100 bg-white"></tbody>
+        <tfoot class="bg-slate-50 font-medium"><tr class="totais"></tr></tfoot>
+      </table>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-4 mt-6 resumo"></div>`;
+  panels.appendChild(nodeSem);
+  
+  // Aba Comparativo
+  const nodeComp=document.getElementById('comparativo-template').content.cloneNode(true); const panelComp=nodeComp.querySelector('.panel'); panelComp.id='panel-comparativo'; panelComp.dataset.key='comparativo'; panelComp.classList.add('hidden');
+  panels.appendChild(nodeComp);
+  
+  // Adicionar inputs às abas majorada e sem-majoracao
+  ['majorada','sem-majoracao'].forEach(key=>{
+    const panel=document.getElementById(`panel-${key}`); const tbody=panel.querySelector('.inputs');
+    const base=atividades.slice(0,5); let exibir=[...base]; exibir.push(atividades[5]);
+    exibir.push(atividades[6]);
+    let irrfAdded = false, csllAdded = false;
     exibir.forEach(at=>{
-      if(at.key==='irrf'||at.key==='csllret'){ const sep=document.createElement('tr'); sep.innerHTML=`<td colspan="5" class="pt-4 pb-1"><div class="text-[11px] uppercase tracking-wider font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded">Retenções na fonte (opcional)</div></td>`; tbody.appendChild(sep); }
+      if(at.key==='irrf' && !irrfAdded){ const sep=document.createElement('tr'); sep.innerHTML=`<td colspan="5" class="pt-4 pb-1"><div class="text-[11px] uppercase tracking-wider font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded">Retenções na fonte (opcional)</div></td>`; tbody.appendChild(sep); irrfAdded=true; }
+      if(at.key==='csllret' && !csllAdded){ const sep=document.createElement('tr'); sep.innerHTML=`<td colspan="5" class="pt-4 pb-1"><div class="text-[11px] uppercase tracking-wider font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded">Retenções na fonte (opcional)</div></td>`; tbody.appendChild(sep); csllAdded=true; }
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td class="py-2.5 pr-4 font-medium text-slate-700">${at.label}</td>${[0,1,2,3].map(i=>`<td class="py-1.5 pl-2"><input data-tab="${key}" data-act="${at.key}" data-tri="${i}" type="text" inputmode="decimal" class="w-full text-right px-3 py-2 border border-slate-300 rounded-lg hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/20 focus:border-[#0f4c5c] transition" value="${fmtNum(store[key][at.key][i])}"></td>`).join('')}`;
+      tr.innerHTML=`<td class="py-2.5 pr-4 font-medium text-slate-700">${at.label}</td>${[0,1,2,3].map(i=>`<td class="py-1.5 pl-2"><input data-tab="irpj" data-act="${at.key}" data-tri="${i}" type="text" inputmode="decimal" class="w-full text-right px-3 py-2 border border-slate-300 rounded-lg hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/20 focus:border-[#0f4c5c] transition" value="${fmtNum(store.irpj[at.key][i])}"></td>`).join('')}`;
       tbody.appendChild(tr);
     });
   });
 }
 
-function atualizarPainel(key){
-  const calc=calcular(key); const panel=document.getElementById(`panel-${key}`); const tbody=panel.querySelector('.results');
-  tbody.innerHTML=calc.res.map(r=>`<tr class="${r.comMajoracao>0?'bg-emerald-50/70':''}"><td class="py-2.5 px-3 font-medium">T${r.t+1}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.totalReceita)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.semMajoracao)}</td><td class="py-2.5 px-3 text-right tabular-nums ${r.comMajoracao>0?'text-emerald-700 font-semibold':''}">${fmtBRL(r.comMajoracao)}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.baseIrpj)}</td><td class="py-2.5 px-3 text-right tabular-nums font-medium">${fmtBRL(r.irpjLiquido)}${r.irrf>0?`<div class="text-[10px] text-slate-500">IRRF ${fmtBRL(r.irrf)}</div>`:''}</td><td class="py-2.5 px-3 text-right tabular-nums">${fmtBRL(r.baseCsll)}</td><td class="py-2.5 px-3 text-right tabular-nums font-medium">${fmtBRL(r.csllLiquida)}${r.csllret>0?`<div class="text-[10px] text-slate-500">Ret ${fmtBRL(r.csllret)}</div>`:''}</td></tr>`).join('');
-  const totBaseIrpj=round2(calc.res.reduce((s,r)=>s+r.baseIrpj,0)); const totIrpjLiq=round2(calc.res.reduce((s,r)=>s+r.irpjLiquido,0)); const totBaseCsll=round2(calc.res.reduce((s,r)=>s+r.baseCsll,0)); const totCsllLiq=round2(calc.res.reduce((s,r)=>s+r.csllLiquida,0));
-  panel.querySelector('.totais').innerHTML=`<td class="py-2.5 px-3">Total Anual</td><td class="py-2.5 px-3 text-right">${fmtBRL(calc.receitaAnual)}</td><td colspan="2"></td><td class="py-2.5 px-3 text-right">${fmtBRL(totBaseIrpj)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totIrpjLiq)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totBaseCsll)}</td><td class="py-2.5 px-3 text-right">${fmtBRL(totCsllLiq)}</td>`;
-  panel.querySelector('.resumo').innerHTML=`<div class="p-4 rounded-xl border border-slate-200 bg-slate-50"><p class="text-xs text-slate-500">Receita Anual</p><p class="text-xl font-semibold mt-1">${fmtBRL(calc.receitaAnual)}</p></div><div class="p-4 rounded-xl border border-slate-200"><p class="text-xs text-slate-500">IRPJ a Pagar</p><p class="text-xl font-semibold mt-1 text-[#0f4c5c]">${fmtBRL(totIrpjLiq)}</p></div><div class="p-4 rounded-xl border border-slate-200"><p class="text-xs text-slate-500">CSLL a Pagar</p><p class="text-xl font-semibold mt-1 text-[#0f4c5c]">${fmtBRL(totCsllLiq)}</p></div>`;
-  panel.querySelector('.inciso').innerHTML=`<div class="flex items-start gap-3"><div class="mt-0.5 w-8 h-8 rounded-lg bg-amber-600/10 flex items-center justify-center shrink-0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2"><path d="M12 9v4M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="font-semibold text-amber-900">Inciso I, §5º art.15</p><p class="text-sm mt-1">Aplicação: <span class="font-bold ${calc.aplicaInciso?'text-emerald-700':'text-slate-700'}">${calc.aplicaInciso?'SIM':'NÃO'}</span></p><p class="text-sm">Valor a deduzir no 4º tri: <span class="font-semibold">${fmtBRL(calc.diffTotal)}</span></p></div></div>`;
+let abaAtiva='majorada';
+function trocarAba(key){ 
+  abaAtiva=key; 
+  document.querySelectorAll('.tab-btn').forEach(btn=>{ 
+    btn.classList.toggle('tab-active',btn.dataset.tab===key); 
+    btn.classList.toggle('border-transparent',btn.dataset.tab!==key); 
+    btn.classList.toggle('text-slate-600',btn.dataset.tab!==key); 
+  }); 
+  document.querySelectorAll('.panel').forEach(p=>{ 
+    p.classList.toggle('hidden',p.dataset.key!==key); 
+  }); 
+  if(key==='sem-majoracao'||key==='majorada'||key==='comparativo') atualizarPainel(key);
+}
+function vincularInputs(){ 
+  document.querySelectorAll('input[data-tab]').forEach(inp=>{ 
+    inp.addEventListener('input',e=>{ 
+      const {tab,act,tri}=e.target.dataset; 
+      store[tab][act][tri]=parseCurrency(e.target.value); 
+      if(abaAtiva==='majorada') atualizarPainel('majorada');
+      else if(abaAtiva==='sem-majoracao') atualizarPainel('sem-majoracao');
+      else if(abaAtiva==='comparativo') atualizarPainel('comparativo');
+    }); 
+    inp.addEventListener('blur',e=>{ 
+      const {tab,act,tri}=e.target.dataset; 
+      e.target.value=fmtNum(store[tab][act][tri]); 
+    }); 
+    inp.addEventListener('focus',e=>e.target.select()); 
+  }); 
+  document.getElementById('periodo')?.addEventListener('input', ()=>{ 
+    ['majorada','sem-majoracao','comparativo'].forEach(atualizarPainel); 
+  }); 
 }
 
-let abaAtiva='irpj';
-function trocarAba(key){ abaAtiva=key; document.querySelectorAll('.tab-btn').forEach(btn=>{ btn.classList.toggle('tab-active',btn.dataset.tab===key); btn.classList.toggle('border-transparent',btn.dataset.tab!==key); btn.classList.toggle('text-slate-600',btn.dataset.tab!==key); }); document.querySelectorAll('.panel').forEach(p=>{ p.classList.toggle('hidden',p.dataset.key!==key); }); }
-function vincularInputs(){ document.querySelectorAll('input[data-tab]').forEach(inp=>{ inp.addEventListener('input',e=>{ const {tab,act,tri}=e.target.dataset; store[tab][act][tri]=parseCurrency(e.target.value); atualizarPainel(tab); }); inp.addEventListener('blur',e=>{ const {tab,act,tri}=e.target.dataset; e.target.value=fmtNum(store[tab][act][tri]); }); inp.addEventListener('focus',e=>e.target.select()); }); }
-
-document.getElementById('btnZerar').onclick=()=>{ atividades.forEach(a=>store[abaAtiva][a.key]=[0,0,0,0]); document.querySelectorAll(`#panel-${abaAtiva} input`).forEach(inp=>inp.value=fmtNum(0)); atualizarPainel(abaAtiva); };
-document.getElementById('btnExemplo').onclick=()=>{ store[abaAtiva].comb=[800000,900000,1100000,1200000]; store[abaAtiva].comerc=[400000,500000,600000,700000]; store[abaAtiva].serv=[200000,250000,300000,350000]; document.querySelectorAll(`#panel-${abaAtiva} input`).forEach(inp=>{ const {act,tri}=inp.dataset; inp.value=fmtNum(store[abaAtiva][act][tri]||0); }); atualizarPainel(abaAtiva); };
-
-document.getElementById('btnExport').onclick=async()=>{
-  const razao=document.getElementById('razaoSocial').value||'Empresa'; const cnpj=document.getElementById('cnpj').value||''; const calc=calcular(abaAtiva); const data=new Date().toLocaleDateString('pt-BR'); const titulo=abaAtiva==='irpj'?'IRPJ - Lucro Presumido':abaAtiva==='csll2026'?'CSLL 2026':'CSLL 2027';
-  const totIrpj=calc.res.reduce((s,r)=>s+r.irpjLiquido,0); const totCsll=calc.res.reduce((s,r)=>s+r.csllLiquida,0); const totBaseI=calc.res.reduce((s,r)=>s+r.baseIrpj,0); const totBaseC=calc.res.reduce((s,r)=>s+r.baseCsll,0);
-  const html=`<div class="pdf-page">
-    <div class="pdf-header"><div><h1>Simulação Tributária</h1><div style="font-size:11px;color:#475569;margin-top:4px;">${titulo}</div></div><div class="company"><strong>${razao}</strong><br>${cnpj}<br>Emitido em ${data}</div></div>
-    <div class="pdf-section"><h2>Resumo Executivo</h2><div class="pdf-kpi"><div class="card"><div class="label">Receita Anual</div><div class="value">${fmtBRL(calc.receitaAnual)}</div></div><div class="card"><div class="label">IRPJ Total</div><div class="value">${fmtBRL(totIrpj)}</div></div><div class="card"><div class="label">CSLL Total</div><div class="value">${fmtBRL(totCsll)}</div></div></div></div>
-    <div class="pdf-section"><h2>Apuração Trimestral</h2><table class="pdf-table"><thead><tr><th>Tri</th><th class="right">Receita</th><th class="right">Base IRPJ</th><th class="right">IRPJ</th><th class="right">Base CSLL</th><th class="right">CSLL</th><th>Majoração</th></tr></thead><tbody>${calc.res.map(r=>`<tr><td>T${r.t+1}</td><td class="right">${fmtBRL(r.totalReceita)}</td><td class="right">${fmtBRL(r.baseIrpj)}</td><td class="right">${fmtBRL(r.irpjLiquido)}</td><td class="right">${fmtBRL(r.baseCsll)}</td><td class="right">${fmtBRL(r.csllLiquida)}</td><td>${r.comMajoracao>0?'<span class="badge badge-majorado">SIM '+fmtBRL(r.comMajoracao)+'</span>':'—'}</td></tr>`).join('')}</tbody><tfoot><tr><td>Total</td><td class="right">${fmtBRL(calc.receitaAnual)}</td><td class="right">${fmtBRL(totBaseI)}</td><td class="right">${fmtBRL(totIrpj)}</td><td class="right">${fmtBRL(totBaseC)}</td><td class="right">${fmtBRL(totCsll)}</td><td></td></tr></tfoot></table></div>
-    <div class="pdf-section"><h2>Inciso I, §5º art.15</h2><p style="font-size:10pt;line-height:1.5;">Aplicação: <strong>${calc.aplicaInciso?'SIM':'NÃO'}</strong> • Receita anual ≤ R$ 5.000.000: ${calc.receitaAnual<=5000000?'Sim':'Não'} • Valor a deduzir no 4º tri: <strong>${fmtBRL(calc.diffTotal)}</strong></p></div>
-    <div class="pdf-footer"><div>Simulação sem valor fiscal • Gerado pela Calculadora Lucro Presumido</div><div>Página 1</div></div>
-  </div>`;
-  document.getElementById('pdf-report').innerHTML=html; document.getElementById('pdf-report').style.left='0'; document.getElementById('pdf-report').style.position='relative';
-  const opt={ margin:[0,0,0,0], filename:`Lucro_Presumido_${razao.replace(/\s+/g,'_')}_${abaAtiva}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
-  await html2pdf().set(opt).from(document.getElementById('pdf-report')).save(); document.getElementById('pdf-report').style.left='-10000px'; document.getElementById('pdf-report').style.position='absolute';
+document.getElementById('btnZerar').onclick=()=>{ 
+  atividades.forEach(a=>store.irpj[a.key]=[0,0,0,0]); 
+  document.querySelectorAll('#panel-majorada input, #panel-sem-majoracao input').forEach(inp=>inp.value=fmtNum(0)); 
+  ['majorada','sem-majoracao','comparativo'].forEach(atualizarPainel); 
+};
+document.getElementById('btnExemplo').onclick=()=>{ 
+  store.irpj.comb=[800000,900000,1100000,1200000]; 
+  store.irpj.comerc=[400000,500000,600000,700000]; 
+  store.irpj.serv=[200000,250000,300000,350000]; 
+  document.querySelectorAll('#panel-majorada input, #panel-sem-majoracao input').forEach(inp=>{ 
+    const {act,tri}=inp.dataset; 
+    inp.value=fmtNum(store.irpj[act][tri]||0); 
+  }); 
+  ['majorada','sem-majoracao','comparativo'].forEach(atualizarPainel); 
+};
+document.getElementById('btnReplicar').onclick=()=>{ 
+  document.querySelectorAll('#panel-majorada input, #panel-sem-majoracao input').forEach(inp=>{ 
+    const {act,tri}=inp.dataset; 
+    inp.value = fmtNum(store.irpj[act][tri]||0);
+  });
+  ['majorada','sem-majoracao','comparativo'].forEach(atualizarPainel); 
 };
 
+document.getElementById('btnExport').onclick=async()=>{
+  const razao=document.getElementById('razaoSocial').value.trim()||'';
+  const cnpj=document.getElementById('cnpj').value.trim()||'';
+  const periodo=document.getElementById('periodo').value.trim()||'2026';
+  const nomeArquivo = razao ? `Simulação LP ${periodo} - ${razao}` : `Simulação LP ${periodo}`;
+  const calcMaj=calcularComMajoracao(); 
+  const calcSem=calcularSemMajoracao(); 
+  const data=new Date().toLocaleDateString('pt-BR'); 
+
+  // Página 1: Majorada
+  const totIrpjMaj=calcMaj.res.reduce((s,r)=>s+r.irpjLiquido,0);
+  const totCsllMaj=calcMaj.res.reduce((s,r)=>s+r.csllLiquida,0);
+  const page1 = `
+  <div class="pdf-page">
+    <div class="pdf-header">
+      <div>
+        <h1>Simulação Tributária</h1>
+        <div style="font-size:11px;color:#475569;margin-top:4px;">Apuração Majorada - Lucro Presumido • Período: ${periodo}</div>
+      </div>
+      <div class="company"><strong>${razao}</strong><br>${cnpj}<br>Emitido em ${data}</div>
+    </div>
+    <div class="pdf-section">
+      <h2>Resumo Executivo</h2>
+      <div class="pdf-kpi">
+        <div class="card"><div class="label">Receita Anual</div><div class="value">${fmtBRL(calcMaj.receitaAnual)}</div></div>
+        <div class="card"><div class="label">IRPJ Total</div><div class="value">${fmtBRL(totIrpjMaj)}</div></div>
+        <div class="card"><div class="label">CSLL Total</div><div class="value">${fmtBRL(totCsllMaj)}</div></div>
+      </div>
+    </div>
+    <div class="pdf-section">
+      <h2>Apuração Trimestral</h2>
+      <table class="pdf-table">
+        <thead><tr><th>Tri</th><th class="right">Receita</th><th class="right">Base IRPJ</th><th class="right">IRPJ</th><th class="right">Base CSLL</th><th class="right">CSLL</th><th>Majoração</th></tr></thead>
+        <tbody>${calcMaj.res.map(r=>`<tr><td>T${r.t+1}</td><td class="right">${fmtBRL(r.totalReceita)}</td><td class="right">${fmtBRL(r.baseIrpj)}</td><td class="right">${fmtBRL(r.irpjLiquido)}</td><td class="right">${fmtBRL(r.baseCsll)}</td><td class="right">${fmtBRL(r.csllLiquida)}</td><td>${r.comMajoracao>0?`<span class="badge badge-majorado">SIM ${fmtBRL(r.comMajoracao)}</span>`:'—'}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>Total</td><td class="right">${fmtBRL(calcMaj.receitaAnual)}</td><td class="right">${fmtBRL(calcMaj.res.reduce((s,r)=>s+r.baseIrpj,0))}</td><td class="right">${fmtBRL(totIrpjMaj)}</td><td class="right">${fmtBRL(calcMaj.res.reduce((s,r)=>s+r.baseCsll,0))}</td><td class="right">${fmtBRL(totCsllMaj)}</td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="pdf-section">
+      <h2>Inciso I, §5º art.15</h2>
+      <p style="font-size:10pt;line-height:1.5;">Aplicação: <strong>${calcMaj.aplicaInciso?'SIM':'NÃO'}</strong> • Receita anual ≤ R$ 5.000.000: ${calcMaj.receitaAnual<=5000000?'Sim':'Não'} • Valor a deduzir no 4º tri: <strong>${fmtBRL(calcMaj.diffTotal)}</strong></p>
+    </div>
+    <div class="pdf-footer"><div>Simulação sem valor fiscal • Gerado pela Calculadora Lucro Presumido • Período: ${periodo}</div><div>Página 1</div></div>
+  </div>`;
+
+  // Página 2: Sem Majoração
+  const totIrpjSem=calcSem.res.reduce((s,r)=>s+r.irpjLiquido,0);
+  const totCsllSem=calcSem.res.reduce((s,r)=>s+r.csllLiquida,0);
+  const page2 = `
+  <div class="pdf-page page-break">
+    <div class="pdf-header">
+      <div>
+        <h1>Simulação Tributária</h1>
+        <div style="font-size:11px;color:#475569;margin-top:4px;">Apuração sem Majoração - Lucro Presumido • Período: ${periodo}</div>
+      </div>
+      <div class="company"><strong>${razao}</strong><br>${cnpj}<br>Emitido em ${data}</div>
+    </div>
+    <div class="pdf-section">
+      <h2>Resumo Executivo</h2>
+      <div class="pdf-kpi">
+        <div class="card"><div class="label">Receita Anual</div><div class="value">${fmtBRL(calcSem.receitaAnual)}</div></div>
+        <div class="card"><div class="label">IRPJ Total</div><div class="value">${fmtBRL(totIrpjSem)}</div></div>
+        <div class="card"><div class="label">CSLL Total</div><div class="value">${fmtBRL(totCsllSem)}</div></div>
+      </div>
+    </div>
+    <div class="pdf-section">
+      <h2>Apuração Trimestral</h2>
+      <table class="pdf-table">
+        <thead><tr><th>Tri</th><th class="right">Receita</th><th class="right">Base IRPJ</th><th class="right">IRPJ</th><th class="right">Base CSLL</th><th class="right">CSLL</th></tr></thead>
+        <tbody>${calcSem.res.map(r=>`<tr><td>T${r.t+1}</td><td class="right">${fmtBRL(r.totalReceita)}</td><td class="right">${fmtBRL(r.baseIrpj)}</td><td class="right">${fmtBRL(r.irpjLiquido)}</td><td class="right">${fmtBRL(r.baseCsll)}</td><td class="right">${fmtBRL(r.csllLiquida)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>Total</td><td class="right">${fmtBRL(calcSem.receitaAnual)}</td><td class="right">${fmtBRL(calcSem.res.reduce((s,r)=>s+r.baseIrpj,0))}</td><td class="right">${fmtBRL(totIrpjSem)}</td><td class="right">${fmtBRL(calcSem.res.reduce((s,r)=>s+r.baseCsll,0))}</td><td class="right">${fmtBRL(totCsllSem)}</td></tr></tfoot>
+      </table>
+    </div>
+    <div class="pdf-footer"><div>Simulação sem valor fiscal • Gerado pela Calculadora Lucro Presumido • Período: ${periodo}</div><div>Página 2</div></div>
+  </div>`;
+
+  // Página 3: Comparativo (com classe compact)
+  let compRows = '';
+  let totDifIRPJ = 0, totDifCSLL = 0, totDifTotal = 0;
+  for(let t=0;t<4;t++){
+    const rCom = calcMaj.res[t], rSem = calcSem.res[t];
+    const difI = round2(rCom.irpjLiquido - rSem.irpjLiquido);
+    const difC = round2(rCom.csllLiquida - rSem.csllLiquida);
+    const difT = round2(difI + difC);
+    totDifIRPJ += difI; totDifCSLL += difC; totDifTotal += difT;
+    compRows += `<tr>
+      <td>T${rCom.t+1}</td>
+      <td class="right">${fmtBRL(rCom.totalReceita)}</td>
+      <td class="right">${fmtBRL(rSem.irpjLiquido)}</td>
+      <td class="right">${fmtBRL(rCom.irpjLiquido)}</td>
+      <td class="right ${difI>0?'text-red-600':''}">${fmtBRL(difI)}</td>
+      <td class="right">${fmtBRL(rSem.csllLiquida)}</td>
+      <td class="right">${fmtBRL(rCom.csllLiquida)}</td>
+      <td class="right ${difC>0?'text-red-600':''}">${fmtBRL(difC)}</td>
+      <td class="right ${difT>0?'text-red-600':''}">${fmtBRL(difT)}</td>
+    </tr>`;
+  }
+  totDifIRPJ = round2(totDifIRPJ); totDifCSLL = round2(totDifCSLL); totDifTotal = round2(totDifTotal);
+  const page3 = `
+  <div class="pdf-page page-break">
+    <div class="pdf-header">
+      <div>
+        <h1>Simulação Tributária</h1>
+        <div style="font-size:11px;color:#475569;margin-top:4px;">Comparativo Fiscal • Período: ${periodo}</div>
+      </div>
+      <div class="company"><strong>${razao}</strong><br>${cnpj}<br>Emitido em ${data}</div>
+    </div>
+    <div class="pdf-section">
+      <h2>Comparativo Com e Sem Majoração</h2>
+      <table class="pdf-table compact">
+        <thead><tr><th>Tri</th><th class="right">Receita</th><th class="right">IRPJ s/</th><th class="right">IRPJ c/</th><th class="right">Dif.</th><th class="right">CSLL s/</th><th class="right">CSLL c/</th><th class="right">Dif.</th><th class="right">Total</th></tr></thead>
+        <tbody>${compRows}</tbody>
+        <tfoot><tr>
+          <td>Total</td>
+          <td class="right">${fmtBRL(calcMaj.receitaAnual)}</td>
+          <td class="right">${fmtBRL(totIrpjSem)}</td>
+          <td class="right">${fmtBRL(totIrpjMaj)}</td>
+          <td class="right ${totDifIRPJ>0?'text-red-600':''}">${fmtBRL(totDifIRPJ)}</td>
+          <td class="right">${fmtBRL(totCsllSem)}</td>
+          <td class="right">${fmtBRL(totCsllMaj)}</td>
+          <td class="right ${totDifCSLL>0?'text-red-600':''}">${fmtBRL(totDifCSLL)}</td>
+          <td class="right ${totDifTotal>0?'text-red-600':''}">${fmtBRL(totDifTotal)}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div class="pdf-footer"><div>Simulação sem valor fiscal • Gerado pela Calculadora Lucro Presumido • Período: ${periodo}</div><div>Página 3</div></div>
+  </div>`;
+
+  const fullHtml = page1 + page2 + page3;
+  document.getElementById('pdf-report').innerHTML = fullHtml; 
+  document.getElementById('pdf-report').style.left = '0'; 
+  document.getElementById('pdf-report').style.position = 'relative';
+  const opt = { 
+    margin: [0,0,0,0], 
+    filename: nomeArquivo.replace(/\s+/g, '_') + '.pdf', 
+    image: {type:'jpeg',quality:0.98}, 
+    html2canvas: {scale:2,useCORS:true}, 
+    jsPDF: {unit:'mm',format:'a4',orientation:'portrait'} 
+  };
+  await html2pdf().set(opt).from(document.getElementById('pdf-report')).save(); 
+  document.getElementById('pdf-report').style.left = '-10000px'; 
+  document.getElementById('pdf-report').style.position = 'absolute';
+};
 
 document.getElementById('btnExcel').onclick = ()=>{
   const wb = XLSX.utils.book_new();
-  const razao = document.getElementById('razaoSocial').value || '';
-  const cnpj = document.getElementById('cnpj').value || '';
+  const razao = document.getElementById('razaoSocial').value.trim()||'';
+  const cnpj = document.getElementById('cnpj').value.trim()||'';
+  const periodo = document.getElementById('periodo').value.trim()||'2026';
+  const nomeArquivo = razao ? `Simulação LP ${periodo} - ${razao}` : `Simulação LP ${periodo}`;
   
-  function criarSheet(nome, dados){
+  function criarSheetComMajoracao(nome){
     const ws = {};
     ws['A1'] = {v: 'Simulação Lucro Presumido - ' + nome, t:'s', s:{font:{sz:16,bold:true,color:{rgb:"0F4C5C"}}}};
     ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:4}}];
     ws['A3'] = {v:'Razão Social', t:'s', s:{font:{bold:true}}}; ws['B3'] = {v: razao, t:'s'};
     ws['A4'] = {v:'CNPJ', t:'s', s:{font:{bold:true}}}; ws['B4'] = {v: cnpj, t:'s'};
+    ws['A5'] = {v:'Período', t:'s', s:{font:{bold:true}}}; ws['B5'] = {v: periodo, t:'s'};
     
-    ws['A6'] = {v:'Atividade', t:'s', s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; 
-    ['B6','C6','D6','E6'].forEach((c,i)=>{ ws[c]={v:['T1','T2','T3','T4'][i],t:'s',s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; });
+    ws['A7'] = {v:'Atividade', t:'s', s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; 
+    ['B7','C7','D7','E7'].forEach((c,i)=>{ ws[c]={v:['T1','T2','T3','T4'][i],t:'s',s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; });
     
     const linhas = [
-      ['Venda Combustíveis','comb',7],
-      ['Comércio/Indústria/Transporte','comerc',8],
-      ['Prestação Serviços','serv',9],
-      ['Rec. Aplic. Financeira','fin',10],
-      ['Crédito Presumido','cred',11],
-      ['IRRF Retido','irrf',12],
-      ['CSLL Retida','csllret',13]
+      ['Venda Combustíveis','comb',8],
+      ['Comércio/Indústria/Transporte','comerc',9],
+      ['Prestação Serviços','serv',10],
+      ['Rec. Aplic. Financeira','fin',11],
+      ['Crédito Presumido','cred',12],
+      ['IRRF Retido','irrf',13],
+      ['CSLL Retida','csllret',14]
     ];
     linhas.forEach(([label,key,row],idx)=>{
       const fill = idx%2===0 ? "F8FAFC" : "FFFFFF";
       ws['A'+row] = {v:label, t:'s', s:{fill:{fgColor:{rgb:fill}}}};
       for(let t=0;t<4;t++){
         const col = String.fromCharCode(66+t);
-        ws[col+row] = {v: (dados[key] && dados[key][t]) || 0, t:'n', z:'R$ #,##0.00', s:{fill:{fgColor:{rgb:fill}},numFmt:'R$ #,##0.00',alignment:{horizontal:"right"}}};
+        ws[col+row] = {v: (store.irpj[key] && store.irpj[key][t]) || 0, t:'n', z:'R$ #,##0.00', s:{fill:{fgColor:{rgb:fill}},numFmt:'R$ #,##0.00',alignment:{horizontal:"right"}}};
       }
     });
     
-    const start = 16;
+    const start = 17;
     const headers = ['Tri','Receita Total','Sem Majoração','Com Majoração','Base IRPJ','IRPJ Bruto','IRPJ Líquido','Base CSLL','CSLL Bruta','CSLL Líquida'];
     headers.forEach((h,i)=>{ const cell = String.fromCharCode(65+i)+start; ws[cell] = {v:h, t:'s', s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; });
     
@@ -467,18 +767,18 @@ document.getElementById('btnExcel').onclick = ()=>{
       const col = String.fromCharCode(66+t);
       const fill = t%2===0 ? "FFFFFF" : "F8FAFC";
       ws['A'+r] = {v:'T'+(t+1), t:'s', s:{alignment:{horizontal:"center"},fill:{fgColor:{rgb:fill}}}};
-      ws['B'+r] = {f:`SUM(${col}7:${col}9)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['B'+r] = {f:`SUM(${col}8:${col}10)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       if(t===0) ws['C'+r] = {f:`MIN(B${r},1250000)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       else if(t===1) ws['C'+r] = {f:`MIN(B${r},MAX(0,2500000-C${start+1}))`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       else if(t===2) ws['C'+r] = {f:`MIN(B${r},MAX(0,3750000-C${start+1}-C${start+2}))`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       else ws['C'+r] = {f:`MIN(B${r},MAX(0,5000000-C${start+1}-C${start+2}-C${start+3}))`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       ws['D'+r] = {f:`B${r}-C${r}`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
-      ws['E'+r] = {f:`IF(B${r}>0, ${col}7*C${r}/B${r}*0.016 + ${col}8*C${r}/B${r}*0.08 + ${col}9*C${r}/B${r}*0.32 + ${col}7*D${r}/B${r}*0.0176 + ${col}8*D${r}/B${r}*0.088 + ${col}9*D${r}/B${r}*0.352, 0) + ${col}10 + ${col}11`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['E'+r] = {f:`IF(B${r}>0, ${col}8*C${r}/B${r}*0.016 + ${col}9*C${r}/B${r}*0.08 + ${col}10*C${r}/B${r}*0.32 + ${col}8*D${r}/B${r}*0.0176 + ${col}9*D${r}/B${r}*0.088 + ${col}10*D${r}/B${r}*0.352, 0) + ${col}11 + ${col}12`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       ws['F'+r] = {f:`E${r}*0.15 + MAX(0,E${r}-60000)*0.1`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
-      ws['G'+r] = {f:`MAX(0,F${r}-${col}12)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}};
-      ws['H'+r] = {f:`IF(B${r}>0, ${col}7*C${r}/B${r}*0.12 + ${col}8*C${r}/B${r}*0.12 + ${col}9*C${r}/B${r}*0.32 + ${col}7*D${r}/B${r}*0.132 + ${col}8*D${r}/B${r}*0.132 + ${col}9*D${r}/B${r}*0.352, 0) + ${col}10 + ${col}11`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['G'+r] = {f:`MAX(0,F${r}-${col}13)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}};
+      ws['H'+r] = {f:`IF(B${r}>0, ${col}8*C${r}/B${r}*0.12 + ${col}9*C${r}/B${r}*0.12 + ${col}10*C${r}/B${r}*0.32 + ${col}8*D${r}/B${r}*0.132 + ${col}9*D${r}/B${r}*0.132 + ${col}10*D${r}/B${r}*0.352, 0) + ${col}11 + ${col}12`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
       ws['I'+r] = {f:`H${r}*0.09`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
-      ws['J'+r] = {f:`MAX(0,I${r}-${col}13)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}};
+      ws['J'+r] = {f:`MAX(0,I${r}-${col}14)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}};
     }
     const tot = start+5;
     ws['A'+tot] = {v:'TOTAL ANUAL', t:'s', s:{fill:{fgColor:{rgb:"E0F2FE"}},font:{bold:true,color:{rgb:"0F4C5C"}}}};
@@ -489,20 +789,120 @@ document.getElementById('btnExcel').onclick = ()=>{
     ws['!sheetViews'] = [{showGridLines:false}];
     const watermarkRow = tot + 4;
     ws['A'+watermarkRow] = {v:'Desenvolvido por Luciellen de Sousa', t:'s', s:{font:{sz:8,color:{rgb:'9CA3AF'},italic:true}}};
-    ws['!freeze'] = {xSplit:1, ySplit:6};
+    ws['!freeze'] = {xSplit:1, ySplit:7};
     return ws;
   }
   
-  XLSX.utils.book_append_sheet(wb, criarSheet('IRPJ', store.irpj), 'IRPJ');
-  XLSX.utils.book_append_sheet(wb, criarSheet('CSLL 2026', store.csll2026), 'CSLL 2026');
-  XLSX.utils.book_append_sheet(wb, criarSheet('CSLL 2027', store.csll2027), 'CSLL 2027');
+  function criarSheetSemMajoracao(nome){
+    const ws = {};
+    ws['A1'] = {v: 'Simulação Lucro Presumido - ' + nome, t:'s', s:{font:{sz:16,bold:true,color:{rgb:"0F4C5C"}}}};
+    ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:4}}];
+    ws['A3'] = {v:'Razão Social', t:'s', s:{font:{bold:true}}}; ws['B3'] = {v: razao, t:'s'};
+    ws['A4'] = {v:'CNPJ', t:'s', s:{font:{bold:true}}}; ws['B4'] = {v: cnpj, t:'s'};
+    ws['A5'] = {v:'Período', t:'s', s:{font:{bold:true}}}; ws['B5'] = {v: periodo, t:'s'};
+    
+    ws['A7'] = {v:'Atividade', t:'s', s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; 
+    ['B7','C7','D7','E7'].forEach((c,i)=>{ ws[c]={v:['T1','T2','T3','T4'][i],t:'s',s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; });
+    
+    const linhas = [
+      ['Venda Combustíveis','comb',8],
+      ['Comércio/Indústria/Transporte','comerc',9],
+      ['Prestação Serviços','serv',10],
+      ['Rec. Aplic. Financeira','fin',11],
+      ['Crédito Presumido','cred',12],
+      ['IRRF Retido','irrf',13],
+      ['CSLL Retida','csllret',14]
+    ];
+    linhas.forEach(([label,key,row],idx)=>{
+      const fill = idx%2===0 ? "F8FAFC" : "FFFFFF";
+      ws['A'+row] = {v:label, t:'s', s:{fill:{fgColor:{rgb:fill}}}};
+      for(let t=0;t<4;t++){
+        const col = String.fromCharCode(66+t);
+        ws[col+row] = {v: (store.irpj[key] && store.irpj[key][t]) || 0, t:'n', z:'R$ #,##0.00', s:{fill:{fgColor:{rgb:fill}},numFmt:'R$ #,##0.00',alignment:{horizontal:"right"}}};
+      }
+    });
+    
+    const start = 17;
+    const headers = ['Tri','Receita Total','Base IRPJ','IRPJ Bruto','IRPJ Líquido','Base CSLL','CSLL Bruta','CSLL Líquida'];
+    headers.forEach((h,i)=>{ const cell = String.fromCharCode(65+i)+start; ws[cell] = {v:h, t:'s', s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true},alignment:{horizontal:"center"}}}; });
+    
+    for(let t=0; t<4; t++){
+      const r = start+1+t;
+      const col = String.fromCharCode(66+t);
+      const fill = t%2===0 ? "FFFFFF" : "F8FAFC";
+      ws['A'+r] = {v:'T'+(t+1), t:'s', s:{alignment:{horizontal:"center"},fill:{fgColor:{rgb:fill}}}};
+      ws['B'+r] = {f:`SUM(${col}8:${col}10)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['C'+r] = {f:`${col}8*0.016 + ${col}9*0.08 + ${col}10*0.32 + ${col}11 + ${col}12`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['D'+r] = {f:`C${r}*0.15 + MAX(0,C${r}-60000)*0.1`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['E'+r] = {f:`MAX(0,D${r}-${col}13)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}};
+      ws['F'+r] = {f:`${col}8*0.12 + ${col}9*0.12 + ${col}10*0.32 + ${col}11 + ${col}12`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['G'+r] = {f:`F${r}*0.09`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},alignment:{horizontal:"right"}}};
+      ws['H'+r] = {f:`MAX(0,G${r}-${col}14)`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:fill}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}};
+    }
+    const tot = start+5;
+    ws['A'+tot] = {v:'TOTAL ANUAL', t:'s', s:{fill:{fgColor:{rgb:"E0F2FE"}},font:{bold:true,color:{rgb:"0F4C5C"}}}};
+    ['B','C','D','E','F','G','H'].forEach(col=>{ ws[col+tot] = {f:`SUM(${col}${start+1}:${col}${start+4})`, t:'n', z:'R$ #,##0.00', s:{numFmt:'R$ #,##0.00',fill:{fgColor:{rgb:"E0F2FE"}},font:{bold:true,color:{rgb:"0F4C5C"}},alignment:{horizontal:"right"}}}; });
+    
+    ws['!cols'] = [{wch:30},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16}];
+    ws['!ref'] = 'A1:H'+(tot+5);
+    ws['!sheetViews'] = [{showGridLines:false}];
+    const watermarkRow = tot + 4;
+    ws['A'+watermarkRow] = {v:'Desenvolvido por Luciellen de Sousa', t:'s', s:{font:{sz:8,color:{rgb:'9CA3AF'},italic:true}}};
+    ws['!freeze'] = {xSplit:1, ySplit:7};
+    return ws;
+  }
+
+  function criarSheetComparativo(){
+    const ws = {};
+    ws['A1'] = {v: 'Comparativo Fiscal', t:'s', s:{font:{sz:16,bold:true,color:{rgb:"0F4C5C"}}}};
+    ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:8}}];
+    ws['A3'] = {v:'Razão Social', t:'s', s:{font:{bold:true}}}; ws['B3'] = {v: razao, t:'s'};
+    ws['A4'] = {v:'CNPJ', t:'s', s:{font:{bold:true}}}; ws['B4'] = {v: cnpj, t:'s'};
+    ws['A5'] = {v:'Período', t:'s', s:{font:{bold:true}}}; ws['B5'] = {v: periodo, t:'s'};
+    
+    const headers = ['Tri','Receita Total','IRPJ s/ Majoração','IRPJ c/ Majoração','Dif. IRPJ','CSLL s/ Majoração','CSLL c/ Majoração','Dif. CSLL','Dif. Total'];
+    headers.forEach((h,i)=>{ ws[String.fromCharCode(65+i)+'7'] = {v:h, t:'s', s:{fill:{fgColor:{rgb:"0F4C5C"}},font:{color:{rgb:"FFFFFF"},bold:true}}}; });
+    
+    const refMaj = "'Apuração Majorada'!";
+    const refSem = "'Apuração sem Majoração'!";
+    for(let t=0; t<4; t++){
+      const r = 8 + t;
+      const rowMaj = 17+1+t; // 18,19,20,21
+      const rowSem = 17+1+t;
+      ws['A'+r] = {v:'T'+(t+1), t:'s'};
+      ws['B'+r] = {f:`${refMaj}B${rowMaj}`, t:'n', z:'R$ #,##0.00'};
+      ws['C'+r] = {f:`${refSem}E${rowSem}`, t:'n', z:'R$ #,##0.00'};
+      ws['D'+r] = {f:`${refMaj}G${rowMaj}`, t:'n', z:'R$ #,##0.00'};
+      ws['E'+r] = {f:`D${r}-C${r}`, t:'n', z:'R$ #,##0.00'};
+      ws['F'+r] = {f:`${refSem}H${rowSem}`, t:'n', z:'R$ #,##0.00'};
+      ws['G'+r] = {f:`${refMaj}J${rowMaj}`, t:'n', z:'R$ #,##0.00'};
+      ws['H'+r] = {f:`G${r}-F${r}`, t:'n', z:'R$ #,##0.00'};
+      ws['I'+r] = {f:`E${r}+H${r}`, t:'n', z:'R$ #,##0.00'};
+    }
+    const tot = 12;
+    ws['A'+tot] = {v:'TOTAL', t:'s', s:{fill:{fgColor:{rgb:"E0F2FE"}},font:{bold:true}}};
+    ['B','C','D','E','F','G','H','I'].forEach(col=>{ ws[col+tot] = {f:`SUM(${col}8:${col}11)`, t:'n', z:'R$ #,##0.00', s:{fill:{fgColor:{rgb:"E0F2FE"}},font:{bold:true}}}; });
+
+    ws['!cols'] = Array(9).fill({wch:20});
+    ws['!ref'] = 'A1:I'+(tot+3);
+    ws['!sheetViews'] = [{showGridLines:false}];
+    return ws;
+  }
   
-  XLSX.writeFile(wb, `Lucro_Presumido_${(razao||'simulacao').replace(/\s+/g,'_')}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, criarSheetComMajoracao('Apuração Majorada'), 'Apuração Majorada');
+  XLSX.utils.book_append_sheet(wb, criarSheetSemMajoracao('Apuração sem Majoração'), 'Apuração sem Majoração');
+  XLSX.utils.book_append_sheet(wb, criarSheetComparativo(), 'Comparativo');
+  
+  XLSX.writeFile(wb, nomeArquivo.replace(/\s+/g, '_') + '.xlsx');
 };
 
-criarPaineis(); document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>trocarAba(b.dataset.tab)); vincularInputs(); ['irpj','csll2026','csll2027'].forEach(atualizarPainel); trocarAba('irpj');
+criarPaineis(); 
+document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>trocarAba(b.dataset.tab)); 
+vincularInputs(); 
+['majorada','sem-majoracao','comparativo'].forEach(atualizarPainel); 
+trocarAba('majorada');
 </script>
 
-  <footer class="mt-8 text-center text-[11px] text-slate-400 pb-6">Desenvolvido por Luciellen de Sousa</footer>
+<footer class="mt-8 text-center text-[11px] text-slate-400 pb-6">Desenvolvido por Luciellen de Sousa</footer>
 </body>
 </html>
